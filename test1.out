@@ -1,0 +1,65 @@
+Keyword: keyword, layer: 1
+ --- parent: X, child: [sub-keyword1, sub-keyword2, sub-keyword3]
+
+Keyword: sub-keyword1, layer: 2
+ --- parent: keyword, child: [sub-sub-keyword1-1, sub-sub-keyword1-2, sub-sub-keyword1-3]
+
+Keyword: sub-sub-keyword1-1, layer: 3
+ --- parent: sub-keyword1, child: [description1-1]
+
+Keyword: description1-1, layer: 4
+ --- parent: sub-sub-keyword1-1, child: []
+
+Keyword: sub-sub-keyword1-2, layer: 3
+ --- parent: sub-keyword1, child: [description1-2]
+
+Keyword: description1-2, layer: 4
+ --- parent: sub-sub-keyword1-2, child: []
+
+Keyword: sub-sub-keyword1-3, layer: 3
+ --- parent: sub-keyword1, child: [description1-3]
+
+Keyword: description1-3, layer: 4
+ --- parent: sub-sub-keyword1-3, child: []
+
+Keyword: sub-keyword2, layer: 2
+ --- parent: keyword, child: [sub-sub-keyword2-1, sub-sub-keyword2-2, sub-sub-keyword2-3]
+
+Keyword: sub-sub-keyword2-1, layer: 3
+ --- parent: sub-keyword2, child: [description2-1]
+
+Keyword: description2-1, layer: 4
+ --- parent: sub-sub-keyword2-1, child: []
+
+Keyword: sub-sub-keyword2-2, layer: 3
+ --- parent: sub-keyword2, child: [description2-2]
+
+Keyword: description2-2, layer: 4
+ --- parent: sub-sub-keyword2-2, child: []
+
+Keyword: sub-sub-keyword2-3, layer: 3
+ --- parent: sub-keyword2, child: [description2-3]
+
+Keyword: description2-3, layer: 4
+ --- parent: sub-sub-keyword2-3, child: []
+
+Keyword: sub-keyword3, layer: 2
+ --- parent: keyword, child: [sub-sub-keyword3-1, sub-sub-keyword3-2, sub-sub-keyword3-3]
+
+Keyword: sub-sub-keyword3-1, layer: 3
+ --- parent: sub-keyword3, child: [description3-1]
+
+Keyword: description3-1, layer: 4
+ --- parent: sub-sub-keyword3-1, child: []
+
+Keyword: sub-sub-keyword3-2, layer: 3
+ --- parent: sub-keyword3, child: [description3-2]
+
+Keyword: description3-2, layer: 4
+ --- parent: sub-sub-keyword3-2, child: []
+
+Keyword: sub-sub-keyword3-3, layer: 3
+ --- parent: sub-keyword3, child: [description3-3]
+
+Keyword: description3-3, layer: 4
+ --- parent: sub-sub-keyword3-3, child: []
