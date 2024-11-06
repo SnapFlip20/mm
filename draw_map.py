@@ -1,14 +1,19 @@
+# Last updated: 2024-11-06
+
 import tkinter as tk
+from tkinter import Canvas
+import tkinter.font as tkFont
+from PIL import Image, ImageDraw, ImageFont
 
 class Keyword:
     def __init__(self, *args):
         self.text = 'default'
-        self.layer = 0
-        self.pos_x = 0.0
-        self.pos_y = 0.0
+        self.layer = 0 # depth of node
+        self.pos_x = 0.0 # top-left x coordinate of text
+        self.pos_y = 0.0 # top-left y coordinate of text
         self.parent = None
         self.child = []
-        self.num = 0
+        self.direction = -1 # -1 : left / 1: right
 
         if len(args) > 0:
             if isinstance(args[0], str):
@@ -20,9 +25,54 @@ class Keyword:
         return f'{self.text}'
     
     def __str__(self):
-        # for test
+        # for debug
         par = 'X' if self.parent == None else self.parent.text
         return f'Keyword: {self.text}, layer: {self.layer}\n --- parent: {par}, child: {self.child}\n'
+
+def add_nextline(sentence):
+    space_cnt = 1
+    sentence_lst = list(sentence)
+    max_words_in_line = 5
+
+    for (i, j) in enumerate(sentence):
+        if j == ' ':
+            space_cnt += 1
+        if space_cnt % (max_words_in_line+1) == 0:
+            sentence_lst[i] = '\n'
+            space_cnt = 1
+
+    return ''.join(sentence_lst)
+
+def save_canvas_as_image(canvas):
+    canvas.update()
+    width = canvas.winfo_width()
+    height = canvas.winfo_height()
+ 
+    image = Image.new('RGB', (width, height), 'white')
+    draw = ImageDraw.Draw(image)
+    default_color = 'black'
+    
+    for item in canvas.find_all():
+        coords = canvas.coords(item)
+        item_type = canvas.type(item)
+        fill = default_color
+
+        if item_type == 'text':
+            text = canvas.itemcget(item, 'text')
+            font_name = canvas.itemcget(item, 'font')
+ 
+            tk_font = tkFont.Font(font=font_name)
+            font_size = tk_font.cget('size')
+            font_path = 'C:/Windows/Fonts/arial.ttf'
+            
+            try:
+                pillow_font = ImageFont.truetype(font_path, font_size)
+            except IOError:
+                pillow_font = ImageFont.load_default()
+            
+            draw.text((coords[0], coords[1]), text, fill=fill, font=pillow_font)
+
+    image.save('generated_image.png')
 
 all_node = []
 
@@ -73,69 +123,87 @@ def parsing_md(file_name: str):
     f.close()
 
 def show():
-    ctx, cty = 800, 400
-    main_keyword = all_node[0]
-    main_keyword.pos_x = ctx - len(main_keyword.text)*12
-    main_keyword.pos_y = cty - 30
-
-    label_lst = [tk.Label(mainWindow) for _ in range(len(all_node)+1)]
+    ctx, cty = 855, 500 # center coordinate
 
     for now in all_node:
         match now.layer:
-            case 1:
+            case 1: # keyword
                 now.pos_x = ctx-len(now.text)*12
-                now.pos_y = cty-40
-                print(now.pos_x, now.pos_y)
+                now.pos_y = cty
 
-                node = label_lst.pop()
-                node.config(font=('Times New Roman', 20), text=now.text)
-                node.place(x=now.pos_x, y=now.pos_y)
+                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 30))
 
                 layer2_left = now.child[:len(now.child)//2]
-                left_span = 400
+                left_span = 450
                 layer2_right = now.child[len(now.child)//2:]
-                right_span = 400
+                right_span = 450
 
                 for (i, chd) in enumerate(layer2_left):
-                    # one character = 14px(maybe)
-                    chd.pos_x = now.pos_x - len(chd.text)*14 - 80
+                    chd.pos_x = now.pos_x - len(now.text)*30 - 120
+                    chd.direction = -1
                     if len(layer2_left) == 1:
                         chd.pos_y = now.pos_y
                     else:
                         chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer2_left)-1))
                 
                 for (i, chd) in enumerate(layer2_right):
-                    chd.pos_x = now.pos_x + len(now.text)*14 + 80
+                    chd.pos_x = now.pos_x + len(now.text)*30 + 40
+                    chd.direction = 1
                     if len(layer2_right) == 1:
                         chd.pos_y = now.pos_y
                     else:
                         chd.pos_y = now.pos_y - right_span//2 + i*(right_span//(len(layer2_right)-1))
             
-            case 2:
-                node = label_lst.pop()
-                node.config(font=('Times New Roman', 20), text=now.text)
-                node.place(x=now.pos_x, y=now.pos_y)
+            case 2: # sub-keyword
+                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 20))
+                
+                layer3 = [*now.child]
+                left_span = 300
+                right_span = 300
 
+                for (i, chd) in enumerate(layer3):
+                    if now.direction == -1: # left
+                        chd.direction = -1
+                        chd.pos_x = now.pos_x - len(chd.text)*12 - 40
+                        if len(layer3) == 1:
+                            chd.pos_y = now.pos_y
+                        else:
+                            chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer3)-1))
+                    elif now.direction == 1: # right
+                        chd.direction = 1
+                        chd.pos_x = now.pos_x + len(now.text)*12 + 40
+                        if len(layer3) == 1:
+                            chd.pos_y = now.pos_y
+                        else:
+                            chd.pos_y = now.pos_y - right_span//2 + i*(right_span//(len(layer3)-1))
+            
+            case 3: # sub-sub-keyword
+                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 20))
 
+                dscrp = now.child[0]
 
-def main():
-    parsing_md('test3.in')
-    #for i in all_node:
-        #print(i)
-    
-    #test1 = tk.Label(mainWindow, font = ('Times New Roman', 20), text = 'key')
-    #test1.place(x=458, y=310)
+                if now.direction == -1:
+                    dscrp.pos_x = max(now.pos_x - len(chd.text)*12 - 140, 100)
+                    dscrp.pos_y = now.pos_y - 8
+                
+                elif now.direction == 1:
+                    dscrp.pos_x = min(now.pos_x + len(now.text)*12 + 100, 1400)
+                    dscrp.pos_y = now.pos_y - 8
 
-    show()
-    
-    mainWindow.mainloop()
+            case 4: # description
+                cv.create_text(now.pos_x, now.pos_y, text=add_nextline(now.text), font=('Arial', 15))
 
 
 
 if __name__ == "__main__":
     mainWindow = tk.Tk()
-    width = mainWindow.winfo_screenwidth()
-    height = mainWindow.winfo_screenheight()
-    mainWindow.geometry(f"1600x800")
-    mainWindow.resizable(width = False, height = False)
-    main()
+    mainWindow.geometry("1710x1000")
+
+    cv = Canvas(mainWindow, width=1710, height=1000, bg='white')
+    cv.pack()
+
+    parsing_md('test2.in')
+
+    show()
+
+    save_canvas_as_image(cv)
