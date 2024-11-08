@@ -1,9 +1,11 @@
-# Last updated: 2024-11-06
+# Last updated: 2024-11-08
 
 import tkinter as tk
 from tkinter import Canvas
 import tkinter.font as tkFont
 from PIL import Image, ImageDraw, ImageFont
+
+
 
 class Keyword:
     def __init__(self, *args):
@@ -29,11 +31,21 @@ class Keyword:
         par = 'X' if self.parent == None else self.parent.text
         return f'Keyword: {self.text}, layer: {self.layer}\n --- parent: {par}, child: {self.child}\n'
 
-def add_nextline(sentence):
+    def __lt__(self, other):
+        return len(self.text) < len(self.text)
+    
+    def __eq__(self, other):
+        return len(self.text) == len(other.text)
+    
+    def __len__(self):
+        return len(self.text)
+
+
+
+def add_nextline(sentence, max_words_in_line = 5):
     space_cnt = 1
     sentence_lst = list(sentence)
-    max_words_in_line = 5
-
+    
     for (i, j) in enumerate(sentence):
         if j == ' ':
             space_cnt += 1
@@ -139,15 +151,16 @@ def show():
                 right_span = 450
 
                 for (i, chd) in enumerate(layer2_left):
-                    chd.pos_x = now.pos_x - len(now.text)*30 - 120
+                    longest = len(max(layer2_left))
+                    chd.pos_x = max(now.pos_x - longest*30 - 120, 540)
                     chd.direction = -1
                     if len(layer2_left) == 1:
-                        chd.pos_y = now.pos_y
+                        chd.pos_y = now.pos_y + 8
                     else:
                         chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer2_left)-1))
                 
                 for (i, chd) in enumerate(layer2_right):
-                    chd.pos_x = now.pos_x + len(now.text)*30 + 40
+                    chd.pos_x = min(now.pos_x + len(now.text)*30 + 40, 1000)
                     chd.direction = 1
                     if len(layer2_right) == 1:
                         chd.pos_y = now.pos_y
@@ -158,13 +171,14 @@ def show():
                 cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 20))
                 
                 layer3 = [*now.child]
-                left_span = 300
-                right_span = 300
+                left_span = 70*len(layer3)
+                right_span = 70*len(layer3)
 
                 for (i, chd) in enumerate(layer3):
                     if now.direction == -1: # left
                         chd.direction = -1
-                        chd.pos_x = now.pos_x - len(chd.text)*12 - 40
+                        longest = len(max(layer3))
+                        chd.pos_x = min(now.pos_x - longest*12 - 40, 140)
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y
                         else:
@@ -183,12 +197,12 @@ def show():
                 dscrp = now.child[0]
 
                 if now.direction == -1:
-                    dscrp.pos_x = max(now.pos_x - len(chd.text)*12 - 140, 100)
-                    dscrp.pos_y = now.pos_y - 8
+                    dscrp.pos_x = now.pos_x
+                    dscrp.pos_y = now.pos_y + 30
                 
                 elif now.direction == 1:
-                    dscrp.pos_x = min(now.pos_x + len(now.text)*12 + 100, 1400)
-                    dscrp.pos_y = now.pos_y - 8
+                    dscrp.pos_x = now.pos_x
+                    dscrp.pos_y = now.pos_y + 30
 
             case 4: # description
                 cv.create_text(now.pos_x, now.pos_y, text=add_nextline(now.text), font=('Arial', 15))
@@ -197,12 +211,12 @@ def show():
 
 if __name__ == "__main__":
     mainWindow = tk.Tk()
-    mainWindow.geometry("1710x1000")
+    mainWindow.geometry("1710x1000") # maximum canvas size
 
     cv = Canvas(mainWindow, width=1710, height=1000, bg='white')
     cv.pack()
 
-    parsing_md('test2.in')
+    parsing_md('test3.in')
 
     show()
 
