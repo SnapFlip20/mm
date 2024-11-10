@@ -1,4 +1,4 @@
-# Last updated: 2024-11-08
+# Last updated: 2024-11-10
 
 import tkinter as tk
 from tkinter import Canvas
@@ -45,7 +45,7 @@ class Keyword:
 def add_nextline(sentence, max_words_in_line = 5):
     space_cnt = 1
     sentence_lst = list(sentence)
-    
+
     for (i, j) in enumerate(sentence):
         if j == ' ':
             space_cnt += 1
@@ -143,7 +143,7 @@ def show():
                 now.pos_x = ctx-len(now.text)*12
                 now.pos_y = cty
 
-                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 30))
+                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 35))
 
                 layer2_left = now.child[:len(now.child)//2]
                 left_span = 450
@@ -180,7 +180,7 @@ def show():
                         longest = len(max(layer3))
                         chd.pos_x = min(now.pos_x - longest*12 - 40, 140)
                         if len(layer3) == 1:
-                            chd.pos_y = now.pos_y
+                            chd.pos_y = now.pos_y + 12
                         else:
                             chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer3)-1))
                     elif now.direction == 1: # right
