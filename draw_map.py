@@ -16,6 +16,7 @@ class Keyword:
         self.parent = None
         self.child = []
         self.direction = -1 # -1 : left / 1: right
+        self.tlen = 0 # text length(in canvas)
 
         if len(args) > 0:
             if isinstance(args[0], str):
@@ -103,6 +104,7 @@ def parsing_md(file_name: str):
             gen_node = Keyword(detail, 4)
 
             gen_node.parent = prv_node3
+            gen_node.tlen = len(detail)
             prv_node3.child.append(gen_node)
 
             all_node.append(gen_node)
@@ -113,6 +115,7 @@ def parsing_md(file_name: str):
 
             prv_node3 = gen_node
             gen_node.parent = prv_node2
+            gen_node.tlen = len(detail)
             prv_node2.child.append(gen_node)
 
             all_node.append(gen_node)
@@ -123,6 +126,7 @@ def parsing_md(file_name: str):
 
             prv_node2 = gen_node
             gen_node.parent = root_node
+            gen_node.tlen = len(sub_topic)
             root_node.child.append(gen_node)
 
             all_node.append(gen_node)
@@ -130,6 +134,7 @@ def parsing_md(file_name: str):
         elif context.startswith('#'): # keyword
             main_topic = context[2:].strip()
             gen_node = Keyword(main_topic, 1)
+            gen_node.tlen = len(main_topic)
             root_node = gen_node
 
             all_node.append(gen_node)
@@ -147,7 +152,6 @@ def show():
 
                 cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 34))
                 #cv.create_text(now.pos_x+18.5*4, now.pos_y-30, text=now.text+'test', font=('Arial', 34))
-                
 
                 layer2_left = now.child[:len(now.child)//2]
                 left_span = 450
@@ -155,24 +159,24 @@ def show():
                 right_span = 450
 
                 for (i, chd) in enumerate(layer2_left):
-                    longest = len(max(layer2_left))
+                    longest = max(layer2_left).tlen
                     chd.pos_x = max(now.pos_x - longest*30 - 120, 540)
                     chd.direction = -1
                     if len(layer2_left) == 1:
-                        chd.pos_y = now.pos_y + 8
+                        chd.pos_y = now.pos_y + 6
                     else:
                         chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer2_left)-1))
-                    cv.create_line(now.pos_x, now.pos_y, chd.pos_x, chd.pos_y)
+                    cv.create_line(now.pos_x-5, now.pos_y+19, chd.pos_x+chd.tlen*10, chd.pos_y+13, smooth=True)
                 
                 for (i, chd) in enumerate(layer2_right):
-                    chd.pos_x = min(now.pos_x + len(now.text)*30 + 40, 1000)
+                    chd.pos_x = min(now.pos_x + now.tlen*30 + 40, 1000)
                     chd.direction = 1
                     if len(layer2_right) == 1:
                         chd.pos_y = now.pos_y
                     else:
                         chd.pos_y = now.pos_y - right_span//2 + i*(right_span//(len(layer2_right)-1))
 
-                    cv.create_line(now.pos_x, now.pos_y, chd.pos_x, chd.pos_y)
+                    cv.create_line(now.pos_x+now.tlen*18, now.pos_y+17, chd.pos_x-5, chd.pos_y+18, smooth=True)
             
             case 2: # sub-keyword
                 cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 20))
@@ -184,7 +188,7 @@ def show():
                 for (i, chd) in enumerate(layer3):
                     if now.direction == -1: # left
                         chd.direction = -1
-                        longest = len(max(layer3))
+                        longest = max(layer3).tlen
                         chd.pos_x = min(now.pos_x - longest*12 - 40, 140)
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y + 12
@@ -192,7 +196,7 @@ def show():
                             chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer3)-1))
                     elif now.direction == 1: # right
                         chd.direction = 1
-                        chd.pos_x = now.pos_x + len(now.text)*12 + 40
+                        chd.pos_x = now.pos_x + now.tlen*12 + 40
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y
                         else:
