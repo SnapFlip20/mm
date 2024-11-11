@@ -1,4 +1,4 @@
-# Last updated: 2024-11-10
+# Last updated: 2024-11-11
 
 import tkinter as tk
 from tkinter import Canvas
@@ -69,7 +69,9 @@ def save_canvas_as_image(canvas):
         item_type = canvas.type(item)
         fill = default_color
 
-        if item_type == 'text':
+        if item_type == "line":
+            draw.line(coords, fill=fill)
+        elif item_type == 'text':
             text = canvas.itemcget(item, 'text')
             font_name = canvas.itemcget(item, 'font')
  
@@ -143,7 +145,9 @@ def show():
                 now.pos_x = ctx-len(now.text)*12
                 now.pos_y = cty
 
-                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 35))
+                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 34))
+                #cv.create_text(now.pos_x+18.5*4, now.pos_y-30, text=now.text+'test', font=('Arial', 34))
+                
 
                 layer2_left = now.child[:len(now.child)//2]
                 left_span = 450
@@ -158,6 +162,7 @@ def show():
                         chd.pos_y = now.pos_y + 8
                     else:
                         chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer2_left)-1))
+                    cv.create_line(now.pos_x, now.pos_y, chd.pos_x, chd.pos_y)
                 
                 for (i, chd) in enumerate(layer2_right):
                     chd.pos_x = min(now.pos_x + len(now.text)*30 + 40, 1000)
@@ -166,6 +171,8 @@ def show():
                         chd.pos_y = now.pos_y
                     else:
                         chd.pos_y = now.pos_y - right_span//2 + i*(right_span//(len(layer2_right)-1))
+
+                    cv.create_line(now.pos_x, now.pos_y, chd.pos_x, chd.pos_y)
             
             case 2: # sub-keyword
                 cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 20))
