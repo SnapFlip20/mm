@@ -1,10 +1,14 @@
-# Last updated: 2024-11-11
+# Last updated: 2024-11-12
 
 import tkinter as tk
 from tkinter import Canvas
 import tkinter.font as tkFont
 from PIL import Image, ImageDraw, ImageFont
 
+
+
+all_node = []
+char_len = []
 
 
 class Keyword:
@@ -71,7 +75,10 @@ def save_canvas_as_image(canvas):
         fill = default_color
 
         if item_type == "line":
+            #width = int(float(canvas.itemcget(item, "width")))
+            #draw.line(coords, fill=fill, width=width, joint="curve")
             draw.line(coords, fill=fill)
+
         elif item_type == 'text':
             text = canvas.itemcget(item, 'text')
             font_name = canvas.itemcget(item, 'font')
@@ -88,8 +95,6 @@ def save_canvas_as_image(canvas):
             draw.text((coords[0], coords[1]), text, fill=fill, font=pillow_font)
 
     image.save('generated_image.png')
-
-all_node = []
 
 def parsing_md(file_name: str):
     f = open(file_name, 'r')
@@ -151,7 +156,7 @@ def show():
                 now.pos_y = cty
 
                 cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 34))
-                #cv.create_text(now.pos_x+18.5*4, now.pos_y-30, text=now.text+'test', font=('Arial', 34))
+                #cv.create_text(1340, 450, text='a', font=('Arial', 30))
 
                 layer2_left = now.child[:len(now.child)//2]
                 left_span = 450
@@ -160,23 +165,28 @@ def show():
 
                 for (i, chd) in enumerate(layer2_left):
                     longest = max(layer2_left).tlen
-                    chd.pos_x = max(now.pos_x - longest*30 - 120, 540)
+                    #chd.pos_x = max(now.pos_x - longest*30 - 120, 540)
+                    chd.pos_x = 490
                     chd.direction = -1
                     if len(layer2_left) == 1:
                         chd.pos_y = now.pos_y + 6
                     else:
                         chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer2_left)-1))
-                    cv.create_line(now.pos_x-5, now.pos_y+19, chd.pos_x+chd.tlen*10, chd.pos_y+13, smooth=True)
+                    
+                    cv.create_line(now.pos_x-5, now.pos_y+19,
+                                   chd.pos_x+chd.tlen*10, chd.pos_y+13, smooth=True)
                 
                 for (i, chd) in enumerate(layer2_right):
-                    chd.pos_x = min(now.pos_x + now.tlen*30 + 40, 1000)
+                    #chd.pos_x = min(now.pos_x + now.tlen*30 + 40, 1000)
+                    chd.pos_x = 1030
                     chd.direction = 1
                     if len(layer2_right) == 1:
                         chd.pos_y = now.pos_y
                     else:
                         chd.pos_y = now.pos_y - right_span//2 + i*(right_span//(len(layer2_right)-1))
 
-                    cv.create_line(now.pos_x+now.tlen*18, now.pos_y+17, chd.pos_x-5, chd.pos_y+18, smooth=True)
+                    cv.create_line(now.pos_x+now.tlen*18+20, now.pos_y+17,
+                                   chd.pos_x-5, chd.pos_y+18, smooth=True)
             
             case 2: # sub-keyword
                 cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 20))
@@ -189,34 +199,43 @@ def show():
                     if now.direction == -1: # left
                         chd.direction = -1
                         longest = max(layer3).tlen
-                        chd.pos_x = min(now.pos_x - longest*12 - 40, 140)
+                        #chd.pos_x = min(now.pos_x - longest*12 - 40, 140)
+                        chd.pos_x = 80
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y + 12
                         else:
                             chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer3)-1))
+
+                        cv.create_line(now.pos_x-3, now.pos_y+12,
+                                       370, chd.pos_y+12, smooth=True)
+
                     elif now.direction == 1: # right
                         chd.direction = 1
-                        chd.pos_x = now.pos_x + now.tlen*12 + 40
+                        #chd.pos_x = now.pos_x + now.tlen*12 + 40
+                        chd.pos_x = 1330
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y
                         else:
                             chd.pos_y = now.pos_y - right_span//2 + i*(right_span//(len(layer3)-1))
+
+                        cv.create_line(now.pos_x + now.tlen*11.2, now.pos_y+13,
+                                       chd.pos_x-7, chd.pos_y+13, smooth=True)
             
             case 3: # sub-sub-keyword
                 cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 20))
-
                 dscrp = now.child[0]
 
                 if now.direction == -1:
                     dscrp.pos_x = now.pos_x
-                    dscrp.pos_y = now.pos_y + 30
+                    dscrp.pos_y = now.pos_y + 28
                 
                 elif now.direction == 1:
                     dscrp.pos_x = now.pos_x
-                    dscrp.pos_y = now.pos_y + 30
+                    dscrp.pos_y = now.pos_y + 28
 
             case 4: # description
-                cv.create_text(now.pos_x, now.pos_y, text=add_nextline(now.text), font=('Arial', 15))
+                cv.create_text(now.pos_x, now.pos_y,
+                               text=add_nextline(now.text), font=('Arial', 15))
 
 
 
