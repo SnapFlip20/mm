@@ -1,4 +1,4 @@
-# Last updated: 2024-11-12
+# Last updated: 2024-11-13
 
 import tkinter as tk
 from tkinter import Canvas
@@ -94,7 +94,7 @@ def save_canvas_as_image(canvas):
             
             draw.text((coords[0], coords[1]), text, fill=fill, font=pillow_font)
 
-    image.save('generated_image.png')
+    image.save('image.png')
 
 def parsing_md(file_name: str):
     f = open(file_name, 'r')
