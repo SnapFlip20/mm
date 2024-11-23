@@ -1,14 +1,20 @@
-# Last updated: 2024-11-22
+# Last updated: 2024-11-23
 
-import tkinter as tk
-from tkinter import Canvas
-import tkinter.font as tkFont
+import cv2
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 
-
+# ********** Settings ********** #
 all_node = []
-char_len = []
+cv_width  = 3840
+cv_height = 2160
+default_font = ImageFont.truetype("arial.ttf", 10)
+font1 = ImageFont.truetype("arial.ttf", 100)
+font2 = ImageFont.truetype("arial.ttf", 20)
+font3 = ImageFont.truetype("arial.ttf", 10)
+txt_fill = (0, 0, 0) # black
+# ********** Settings ********** #
 
 
 class Keyword:
@@ -60,41 +66,10 @@ def add_nextline(sentence, max_words_in_line = 5):
 
     return ''.join(sentence_lst)
 
-def save_canvas_as_image(canvas):
-    canvas.update()
-    width = canvas.winfo_width()
-    height = canvas.winfo_height()
- 
-    image = Image.new('RGB', (width, height), 'white')
-    draw = ImageDraw.Draw(image)
-    default_color = 'black'
-    
-    for item in canvas.find_all():
-        coords = canvas.coords(item)
-        item_type = canvas.type(item)
-        fill = default_color
-
-        if item_type == "line":
-            #width = int(float(canvas.itemcget(item, "width")))
-            #draw.line(coords, fill=fill, width=width, joint="curve")
-            draw.line(coords, fill=fill)
-
-        elif item_type == 'text':
-            text = canvas.itemcget(item, 'text')
-            font_name = canvas.itemcget(item, 'font')
- 
-            tk_font = tkFont.Font(font=font_name)
-            font_size = tk_font.cget('size')
-            font_path = 'C:/Windows/Fonts/arial.ttf'
-            
-            try:
-                pillow_font = ImageFont.truetype(font_path, font_size)
-            except IOError:
-                pillow_font = ImageFont.load_default()
-            
-            draw.text((coords[0], coords[1]), text, fill=fill, font=pillow_font)
-
-    image.save('image.png')
+def extract():
+    pil2opencv = cv2.cvtColor(np.array(pImg), cv2.COLOR_RGB2BGR) 
+    cv2.imwrite("test.png", pil2opencv)
+    cv2.destroyAllWindows()
 
 def parsing_md(file_name: str):
     f = open(file_name, 'r')
@@ -147,7 +122,7 @@ def parsing_md(file_name: str):
     f.close()
 
 def show():
-    ctx, cty = 855, 500 # center coordinate
+    ctx, cty = cv_width/2, cv_height/2
 
     for now in all_node:
         match now.layer:
@@ -155,74 +130,68 @@ def show():
                 now.pos_x = ctx-len(now.text)*12
                 now.pos_y = cty
 
-                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 34))
-                #cv.create_text(1340, 450, text='a', font=('Arial', 30))
+                cv.text((now.pos_x, now.pos_y), now.text, font=font1, fill=txt_fill)
 
                 layer2_left = now.child[:len(now.child)//2]
-                left_span = 450
+                left_span = 750
                 layer2_right = now.child[len(now.child)//2:]
-                right_span = 450
+                right_span = 750
 
                 for (i, chd) in enumerate(layer2_left):
                     longest = max(layer2_left).tlen
                     #chd.pos_x = max(now.pos_x - longest*30 - 120, 540)
-                    chd.pos_x = 490
+                    chd.pos_x = 1344
                     chd.direction = -1
                     if len(layer2_left) == 1:
                         chd.pos_y = now.pos_y + 6
                     else:
                         chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer2_left)-1))
                     
-                    cv.create_line(now.pos_x-8, now.pos_y+19,
-                                   chd.pos_x+chd.tlen*10, chd.pos_y+13, smooth=True)
+                    #cv.create_line(now.pos_x-8, now.pos_y+19,chd.pos_x+chd.tlen*10, chd.pos_y+13, smooth=True)
                 
                 for (i, chd) in enumerate(layer2_right):
                     #chd.pos_x = min(now.pos_x + now.tlen*30 + 40, 1000)
-                    chd.pos_x = 1030
+                    chd.pos_x = 2496
                     chd.direction = 1
                     if len(layer2_right) == 1:
                         chd.pos_y = now.pos_y
                     else:
                         chd.pos_y = now.pos_y - right_span//2 + i*(right_span//(len(layer2_right)-1))
 
-                    cv.create_line(now.pos_x+now.tlen*18+20, now.pos_y+17,
-                                   chd.pos_x-5, chd.pos_y+18, smooth=True)
+                    #cv.create_line(now.pos_x+now.tlen*18+20, now.pos_y+17,chd.pos_x-5, chd.pos_y+18, smooth=True)
             
             case 2: # sub-keyword
-                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 20))
+                cv.text((now.pos_x, now.pos_y), now.text, font=font2, fill=txt_fill)
                 
                 layer3 = [*now.child]
-                left_span = 70*len(layer3)
-                right_span = 70*len(layer3)
+                left_span = 510
+                right_span = 510
 
                 for (i, chd) in enumerate(layer3):
                     if now.direction == -1: # left
                         chd.direction = -1
                         longest = max(layer3).tlen
-                        #chd.pos_x = min(now.pos_x - longest*12 - 40, 140)
-                        chd.pos_x = 80
+                        chd.pos_x = 768
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y + 12
                         else:
                             chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer3)-1))
 
-                        cv.create_line(now.pos_x-8, now.pos_y+12,
-                                       370, chd.pos_y+12, smooth=True)
+                        #cv.create_line(now.pos_x-8, now.pos_y+12,370, chd.pos_y+12, smooth=True)
 
                     elif now.direction == 1: # right
                         chd.direction = 1
                         #chd.pos_x = now.pos_x + now.tlen*12 + 40
-                        chd.pos_x = 1330
+                        chd.pos_x = 3072
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y
                         else:
                             chd.pos_y = now.pos_y - right_span//2 + i*(right_span//(len(layer3)-1))
 
-                        cv.create_line(now.pos_x + now.tlen*11.2, now.pos_y+13,
-                                       chd.pos_x-7, chd.pos_y+13, smooth=True)
+                        #cv.create_line(now.pos_x + now.tlen*11.2, now.pos_y+13,chd.pos_x-7, chd.pos_y+13, smooth=True)
             
             case 3: # sub-sub-keyword
-                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 20))
+                cv.text((now.pos_x, now.pos_y), text=now.text, font=font3, fill=txt_fill)
                 dscrp = now.child[0]
 
                 if now.direction == -1:
@@ -234,20 +203,17 @@ def show():
                     dscrp.pos_y = now.pos_y + 28
 
             case 4: # description
-                cv.create_text(now.pos_x, now.pos_y,
-                               text=add_nextline(now.text), font=('Arial', 15))
+                cv.text((now.pos_x, now.pos_y), text=add_nextline(now.text), font=font3, fill=txt_fill)
 
 
 
 if __name__ == "__main__":
-    mainWindow = tk.Tk()
-    mainWindow.geometry("1710x1000") # maximum canvas size
-
-    cv = Canvas(mainWindow, width=1710, height=1000, bg='white')
-    cv.pack()
+    window = np.zeros((cv_height, cv_width, 3), dtype=np.uint8) + 255
+    pImg = Image.fromarray(cv2.cvtColor(window, cv2.COLOR_BGR2RGB))
+    cv = ImageDraw.Draw(pImg)
 
     parsing_md('test3.in')
 
     show()
 
-    save_canvas_as_image(cv)
+    extract()
