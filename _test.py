@@ -1,4 +1,4 @@
-# Last updated: 2024-11-23
+# Last updated: 2024-12-09
 
 import cv2
 import numpy as np
@@ -7,12 +7,13 @@ from PIL import Image, ImageDraw, ImageFont
 
 # ********** Settings ********** #
 all_node = []
-cv_width  = 3840
+cv_width  = 3840 + 1920//2
 cv_height = 2160
+cv_width_block = cv_width/5 + 10
 default_font = ImageFont.truetype("arial.ttf", 10)
 font1 = ImageFont.truetype("arial.ttf", 100)
-font2 = ImageFont.truetype("arial.ttf", 20)
-font3 = ImageFont.truetype("arial.ttf", 10)
+font2 = ImageFont.truetype("arial.ttf", 50)
+font3 = ImageFont.truetype("arial.ttf", 30)
 txt_fill = (0, 0, 0) # black
 # ********** Settings ********** #
 
@@ -127,20 +128,20 @@ def show():
     for now in all_node:
         match now.layer:
             case 1: # keyword
-                now.pos_x = ctx-len(now.text)*12
+                now.pos_x = cv_width_block*2
                 now.pos_y = cty
 
                 cv.text((now.pos_x, now.pos_y), now.text, font=font1, fill=txt_fill)
 
                 layer2_left = now.child[:len(now.child)//2]
-                left_span = 750
+                left_span = 1500
                 layer2_right = now.child[len(now.child)//2:]
-                right_span = 750
+                right_span = 1500
 
                 for (i, chd) in enumerate(layer2_left):
                     longest = max(layer2_left).tlen
                     #chd.pos_x = max(now.pos_x - longest*30 - 120, 540)
-                    chd.pos_x = 1344
+                    chd.pos_x = cv_width_block
                     chd.direction = -1
                     if len(layer2_left) == 1:
                         chd.pos_y = now.pos_y + 6
@@ -151,7 +152,7 @@ def show():
                 
                 for (i, chd) in enumerate(layer2_right):
                     #chd.pos_x = min(now.pos_x + now.tlen*30 + 40, 1000)
-                    chd.pos_x = 2496
+                    chd.pos_x = cv_width_block*3
                     chd.direction = 1
                     if len(layer2_right) == 1:
                         chd.pos_y = now.pos_y
@@ -164,14 +165,14 @@ def show():
                 cv.text((now.pos_x, now.pos_y), now.text, font=font2, fill=txt_fill)
                 
                 layer3 = [*now.child]
-                left_span = 510
-                right_span = 510
+                left_span = 750
+                right_span = 750
 
                 for (i, chd) in enumerate(layer3):
                     if now.direction == -1: # left
                         chd.direction = -1
                         longest = max(layer3).tlen
-                        chd.pos_x = 768
+                        chd.pos_x = 10
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y + 12
                         else:
@@ -182,7 +183,7 @@ def show():
                     elif now.direction == 1: # right
                         chd.direction = 1
                         #chd.pos_x = now.pos_x + now.tlen*12 + 40
-                        chd.pos_x = 3072
+                        chd.pos_x = cv_width_block*4
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y
                         else:
@@ -191,8 +192,8 @@ def show():
                         #cv.create_line(now.pos_x + now.tlen*11.2, now.pos_y+13,chd.pos_x-7, chd.pos_y+13, smooth=True)
             
             case 3: # sub-sub-keyword
-                cv.text((now.pos_x, now.pos_y), text=now.text, font=font3, fill=txt_fill)
-                dscrp = now.child[0]
+                cv.text((now.pos_x, now.pos_y), text=add_nextline(now.text), font=font3, fill=txt_fill)
+                dscrp = now.child[0] if now.child else Keyword()
 
                 if now.direction == -1:
                     dscrp.pos_x = now.pos_x
@@ -212,7 +213,7 @@ if __name__ == "__main__":
     pImg = Image.fromarray(cv2.cvtColor(window, cv2.COLOR_BGR2RGB))
     cv = ImageDraw.Draw(pImg)
 
-    parsing_md('test3.in')
+    parsing_md('test4.in')
 
     show()
 

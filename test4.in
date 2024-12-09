@@ -1,0 +1,74 @@
+# ArXiv Summary
+## 1. Introduction
+### 
+## 2. Preliminaries
+### 
+### 2.1. Pre-tokenization Methods
+#### - Pre-tokenization is a process of breaking text into chunks and then tokenizing them.
+         - They discuss different approaches to this problem.
+         - LlamaTouvron et al. proposed having each digit always be an individual token.
+         - Digit pre-tokenization is what they're talking about.
+         - The title of the article will be: Article Title.
+### 2.2. Vocabulary Construction
+#### Summary: The dialogue discusses Byte-Level, Lossless Subword Tokenization methods. There is discussion on BPE, WordPiece, and Unigram as baseline subword tokenizers, as well as SaGe.
+### 2.3. Segmentation Methods
+#### - Given a tokenizer and a vocabulary of tokens, segmentation converts text into a series of tokens. 
+         - All 256 single-byte tokens were included in the vocabulary. 
+         - Other segmentation methods include Dynamic Programming BPE, BPE-Dropout, and FLOTAH.
+## 3. PathPiece
+### - PathPiece is a lossless subword tokenizer that competes with BPE and GPT-3.
+         - It can help confirm the compression hypothesis.
+         - It was created by Galter et al.
+         - The full description is in Appendix A.
+### 3.1. Segmentation
+#### Summary: PathPiece is a tool for tokenization. PathPiece works on a directed acyclic graph representing training data. PathPiece has complexity O(nL). For each byte: shortest path length and token width are calculated. Ties are broken randomly or longest token is chosen. The backward pass constructs the shortest possible segmentation from token widths.
+### 3.2. Vocabulary Construction
+#### 
+### 3.3. ConnectingPathPieceand Unigram
+#### 
+## 4. Experiments
+### 
+### 4.1. Downstream Evaluation Tasks
+#### 
+### 4.2. Tokenization Stage Variants
+#### 
+## 5. Results
+### - Table 10 from Appendix G shows the downstream performance across all their experimental settings.
+         - The same table sorted by rank is in the file they are working on.
+         - The file contains the comprehensive results for the 10 downstream tasks with 350M parameter models.
+         - The random baseline for these 10 tasks is 32%.
+         - The overall average results with 3 vocabulary sizes are 32.7, 33.4 and 33.7.
+         - The best variant has 100% performance.
+         - The file also shows the same performance metrics with 350M parameter models for another downstream task.
+         - There's a file containing an abstractive summary of downstream tasks performed at another project.
+         - File: <file_other> 
+         - File: <file_other>
+
+### Summary:
+Summary: Table 10 from Appendix G shows the downstream performance across all their experimental settings. The same table sorted by rank is in the file they are working on. The file contains the comprehensive results for the 10 downstream tasks with 350M parameter models. The random baseline for these 10 tasks is 32%. The overall average results with 3 vocabulary sizes are 32.7, 33.4 and 33.7. The best variant has 100% performance. There's a file containing an abstractive summary of downstream tasks performed at another project.
+### 5.1. Vocabulary Size
+#### The overall average accuracy for each variant is 0.750, 0.801 and 0.834. For this reason the vocabulary size is not crucial decision.
+### 5.2. Overall performance
+#### - There is no tokenizer better than the other one at the 350M model size.
+         - Results are variable by model size.
+         - Results are variable by task.
+         - Tokenizers that work well on some tasks also work well on some other tasks.
+         - Data the discussion is based on: Fig_1, Fig_2, Fig_3, Fig_4, Fig_5, Fig_6, Fig_7, Table_1, Wilcoxon
+         - Key words: Tokenizer, Machine Translation, Statistical Language Modeling, Corpus Tokenization, Linguist, Natural Language Processing, Text Corpus, Statistical Language Modeling Experiment, Machine Translation Experiment, Corpus Tokenization Experiment, Statistical Language Modeling Result, Machine Translation Result, Corpus Tokenization Result, Statistical Language Modeling Parameter, Machine Translation Parameter, Corpus Tokenization Parameter, Statistical Language Modeling Process, Machine Translation Process, Corpus Tokenization Process, Statistical Language Modeling Algorithm, Machine Translation Algorithm, Corpus Tokenization Algorithm, Statistical Language Modeling Implementation, Machine Translation Implementation, Corpus Tokenization Implementation, Statistical Language Modeling Parameterization, Machine Translation Parameterization, Corpus Tokenization Parameterization, Statistical Language Modeling Parameterization, Machine Translation Parameterization, Corpus Tokenization Parameterization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization, Machine Translation Parametrization, Corpus Tokenization Parametrization, Statistical Language Modeling Parametrization,
+### 5.3. Corpus Token Count vs Accuracy
+#### 
+## 6. Analysis
+### 
+### 6.1. Pre-tokenization
+#### 
+### 6.2. Vocabulary Construction
+#### 
+### 6.3. Initial Vocabulary
+#### - PathPiece and SaGe both need an initial vocabulary.
+         - For PathPiece the best results were obtained with a vocabulary from most frequent texts, for SaGe - from a vocabulary trained using BPE.
+         - The rest of the dialogue is not particularly interesting or worthy of summary so we will not summarise it.
+         - The main thing we can derive a topic from is that they are talking about text corpora for language modelling.
+### 6.4. Effect of Model Size
+#### - To examine the dependency on model size, they build larger models of 1.3B parameters for 6 of them and 2.4B parameters for 4 of them. These models were trained over the 200 billion tokens and tested at a vocabulary size of 40,960. The average results over the 10 task accuracies for these models is given inFigure_6. SeeTable_14 in AppendixG for the numerical values.
+## 7. Conclusion
+### 
