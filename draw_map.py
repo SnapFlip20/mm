@@ -1,14 +1,26 @@
-# Last updated: 2024-11-22
+# Last updated: 2024-12-10
 
-import tkinter as tk
-from tkinter import Canvas
-import tkinter.font as tkFont
+import cv2
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 
-
+# ********** Settings ********** #
 all_node = []
-char_len = []
+adjusted = 75
+
+# canvas size(pix) settings
+cv_width  = 3840 + 3840//2
+cv_height = 2160 + 2160//2
+cv_width_block = cv_width/5
+
+# font settings
+default_font = ImageFont.truetype("arial.ttf", 10)
+font1 = ImageFont.truetype("arial.ttf", 100)
+font2 = ImageFont.truetype("arial.ttf", 50)
+font3 = ImageFont.truetype("arial.ttf", 30)
+txt_fill = (0, 0, 0) # black
+# ********** Settings end ********** #
 
 
 class Keyword:
@@ -47,7 +59,7 @@ class Keyword:
 
 
 
-def add_nextline(sentence, max_words_in_line = 5):
+def add_nextline(sentence, max_words_in_line = 8) -> str:
     space_cnt = 1
     sentence_lst = list(sentence)
 
@@ -60,41 +72,10 @@ def add_nextline(sentence, max_words_in_line = 5):
 
     return ''.join(sentence_lst)
 
-def save_canvas_as_image(canvas):
-    canvas.update()
-    width = canvas.winfo_width()
-    height = canvas.winfo_height()
- 
-    image = Image.new('RGB', (width, height), 'white')
-    draw = ImageDraw.Draw(image)
-    default_color = 'black'
-    
-    for item in canvas.find_all():
-        coords = canvas.coords(item)
-        item_type = canvas.type(item)
-        fill = default_color
-
-        if item_type == "line":
-            #width = int(float(canvas.itemcget(item, "width")))
-            #draw.line(coords, fill=fill, width=width, joint="curve")
-            draw.line(coords, fill=fill)
-
-        elif item_type == 'text':
-            text = canvas.itemcget(item, 'text')
-            font_name = canvas.itemcget(item, 'font')
- 
-            tk_font = tkFont.Font(font=font_name)
-            font_size = tk_font.cget('size')
-            font_path = 'C:/Windows/Fonts/arial.ttf'
-            
-            try:
-                pillow_font = ImageFont.truetype(font_path, font_size)
-            except IOError:
-                pillow_font = ImageFont.load_default()
-            
-            draw.text((coords[0], coords[1]), text, fill=fill, font=pillow_font)
-
-    image.save('image.png')
+def extract(): # extract canvas image to .png file
+    pil2opencv = cv2.cvtColor(np.array(pImg), cv2.COLOR_RGB2BGR) 
+    cv2.imwrite("test.png", pil2opencv)
+    cv2.destroyAllWindows()
 
 def parsing_md(file_name: str):
     f = open(file_name, 'r')
@@ -115,31 +96,35 @@ def parsing_md(file_name: str):
             all_node.append(gen_node)
 
         elif context.startswith('###'): # sub-sub-keyword
-            detail = context[4:].strip()
-            gen_node = Keyword(detail, 3)
+            detail = (subsubkw := context[4:].strip())
+            
+            if len(detail) > 0:
+                gen_node = Keyword(detail, 3)
 
-            prv_node3 = gen_node
-            gen_node.parent = prv_node2
-            gen_node.tlen = len(detail)
-            prv_node2.child.append(gen_node)
+                prv_node3 = gen_node
+                gen_node.parent = prv_node2
+                gen_node.tlen = cv.textlength(subsubkw, font=font3)
+                prv_node2.child.append(gen_node)
 
-            all_node.append(gen_node)
+                all_node.append(gen_node)
 
         elif context.startswith('##'): # sub-keyword
-            sub_topic = context[3:].strip()
-            gen_node = Keyword(sub_topic, 2)
+            sub_topic = (subkw := context[3:].strip())
 
-            prv_node2 = gen_node
-            gen_node.parent = root_node
-            gen_node.tlen = len(sub_topic)
-            root_node.child.append(gen_node)
+            if len(sub_topic) > 0:
+                gen_node = Keyword(sub_topic, 2)
 
-            all_node.append(gen_node)
+                prv_node2 = gen_node
+                gen_node.parent = root_node
+                gen_node.tlen = cv.textlength(subkw, font=font2)
+                root_node.child.append(gen_node)
+
+                all_node.append(gen_node)
 
         elif context.startswith('#'): # keyword
-            main_topic = context[2:].strip()
+            main_topic = (mainkw := context[2:].strip())
             gen_node = Keyword(main_topic, 1)
-            gen_node.tlen = len(main_topic)
+            gen_node.tlen = cv.textlength(mainkw, font=font1)
             root_node = gen_node
 
             all_node.append(gen_node)
@@ -147,107 +132,86 @@ def parsing_md(file_name: str):
     f.close()
 
 def show():
-    ctx, cty = 855, 500 # center coordinate
+    # center(actually, top-left) coordinate of main keyword text
+    ctx, cty = cv_width_block*2 + adjusted, cv_height/2
 
     for now in all_node:
         match now.layer:
-            case 1: # keyword
-                now.pos_x = ctx-len(now.text)*12
+            case 1: # main keyword
+                global layer2_left, layer2_right, layer2_left_span, layer2_right_span
+                now.pos_x = ctx
                 now.pos_y = cty
 
-                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 34))
-                #cv.create_text(1340, 450, text='a', font=('Arial', 30))
+                cv.text((now.pos_x, now.pos_y), now.text, font=font1, fill=txt_fill)
 
                 layer2_left = now.child[:len(now.child)//2]
-                left_span = 450
+                layer2_left_span = 2000
                 layer2_right = now.child[len(now.child)//2:]
-                right_span = 450
+                layer2_right_span = 2000
 
-                for (i, chd) in enumerate(layer2_left):
-                    longest = max(layer2_left).tlen
-                    #chd.pos_x = max(now.pos_x - longest*30 - 120, 540)
-                    chd.pos_x = 490
+                for (i, chd) in enumerate(layer2_left): # left child of main keyword
+                    chd.pos_x = cv_width_block + adjusted
                     chd.direction = -1
                     if len(layer2_left) == 1:
                         chd.pos_y = now.pos_y + 6
                     else:
-                        chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer2_left)-1))
-                    
-                    cv.create_line(now.pos_x-8, now.pos_y+19,
-                                   chd.pos_x+chd.tlen*10, chd.pos_y+13, smooth=True)
+                        chd.pos_y = now.pos_y - layer2_left_span//2 + i*(layer2_left_span//(len(layer2_left)-1))
                 
-                for (i, chd) in enumerate(layer2_right):
-                    #chd.pos_x = min(now.pos_x + now.tlen*30 + 40, 1000)
-                    chd.pos_x = 1030
+                for (i, chd) in enumerate(layer2_right): # right child of main keyword
+                    chd.pos_x = cv_width_block*3 + now.tlen/2 + adjusted
                     chd.direction = 1
                     if len(layer2_right) == 1:
                         chd.pos_y = now.pos_y
                     else:
-                        chd.pos_y = now.pos_y - right_span//2 + i*(right_span//(len(layer2_right)-1))
-
-                    cv.create_line(now.pos_x+now.tlen*18+20, now.pos_y+17,
-                                   chd.pos_x-5, chd.pos_y+18, smooth=True)
+                        chd.pos_y = now.pos_y - layer2_right_span//2 + i*(layer2_right_span//(len(layer2_right)-1))
             
             case 2: # sub-keyword
-                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 20))
+                cv.text((now.pos_x, now.pos_y), now.text, font=font2, fill=txt_fill)
                 
                 layer3 = [*now.child]
-                left_span = 70*len(layer3)
-                right_span = 70*len(layer3)
+                left_span = (2*layer2_left_span/(len(layer2_left)+1))//1.25
+                right_span = (2*layer2_right_span/(len(layer2_right)+1))//1.25
 
-                for (i, chd) in enumerate(layer3):
-                    if now.direction == -1: # left
+                for (i, chd) in enumerate(layer3): # left(only) child of sub-keyword
+                    if now.direction == -1:
                         chd.direction = -1
-                        longest = max(layer3).tlen
-                        #chd.pos_x = min(now.pos_x - longest*12 - 40, 140)
-                        chd.pos_x = 80
+                        chd.pos_x = adjusted
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y + 12
                         else:
                             chd.pos_y = now.pos_y - left_span//2 + i*(left_span//(len(layer3)-1))
 
-                        cv.create_line(now.pos_x-8, now.pos_y+12,
-                                       370, chd.pos_y+12, smooth=True)
-
-                    elif now.direction == 1: # right
+                    elif now.direction == 1: # right(only) child of sub-keyword
                         chd.direction = 1
-                        #chd.pos_x = now.pos_x + now.tlen*12 + 40
-                        chd.pos_x = 1330
+                        chd.pos_x = cv_width_block*4
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y
                         else:
                             chd.pos_y = now.pos_y - right_span//2 + i*(right_span//(len(layer3)-1))
-
-                        cv.create_line(now.pos_x + now.tlen*11.2, now.pos_y+13,
-                                       chd.pos_x-7, chd.pos_y+13, smooth=True)
-            
+                        
             case 3: # sub-sub-keyword
-                cv.create_text(now.pos_x, now.pos_y, text=now.text, font=('Arial', 20))
-                dscrp = now.child[0]
-
-                if now.direction == -1:
-                    dscrp.pos_x = now.pos_x
-                    dscrp.pos_y = now.pos_y + 28
-                
-                elif now.direction == 1:
-                    dscrp.pos_x = now.pos_x
-                    dscrp.pos_y = now.pos_y + 28
+                cv.text((now.pos_x, now.pos_y), text=add_nextline(now.text), font=font3, fill=txt_fill)
+                if now.child:
+                    dscrp = now.child[0]
+                    if now.direction == -1: # left(only) child of sub-keyword
+                        dscrp.pos_x = now.pos_x
+                        dscrp.pos_y = now.pos_y + 35
+                    
+                    elif now.direction == 1: # right(only) child of sub-keyword
+                        dscrp.pos_x = now.pos_x
+                        dscrp.pos_y = now.pos_y + 35
 
             case 4: # description
-                cv.create_text(now.pos_x, now.pos_y,
-                               text=add_nextline(now.text), font=('Arial', 15))
+                cv.text((now.pos_x, now.pos_y), text=add_nextline(now.text), font=font3, fill=txt_fill)
+                # add_nextline --- to be updated
 
 
 
 if __name__ == "__main__":
-    mainWindow = tk.Tk()
-    mainWindow.geometry("1710x1000") # maximum canvas size
+    window = np.zeros((cv_height, cv_width, 3), dtype=np.uint8) + 255
+    pImg = Image.fromarray(cv2.cvtColor(window, cv2.COLOR_BGR2RGB))
+    cv = ImageDraw.Draw(pImg)
 
-    cv = Canvas(mainWindow, width=1710, height=1000, bg='white')
-    cv.pack()
-
-    parsing_md('test3.in')
-
+    parsing_md('test4.in')
     show()
-
-    save_canvas_as_image(cv)
+    extract()
