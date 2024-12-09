@@ -10,8 +10,8 @@ all_node = []
 adjusted = 75
 
 # canvas size(pix) settings
-cv_width  = 3840 + 3840//2
-cv_height = 2160 + 2160//2
+cv_width  = 3840*2
+cv_height = 2160*2
 cv_width_block = cv_width/5
 
 # font settings
@@ -59,7 +59,7 @@ class Keyword:
 
 
 
-def add_nextline(sentence, max_words_in_line = 8) -> str:
+def add_nextline(sentence, max_words_in_line = 7) -> str:
     space_cnt = 1
     sentence_lst = list(sentence)
 
@@ -97,7 +97,7 @@ def parsing_md(file_name: str):
 
         elif context.startswith('###'): # sub-sub-keyword
             detail = (subsubkw := context[4:].strip())
-            
+
             if len(detail) > 0:
                 gen_node = Keyword(detail, 3)
 
@@ -145,9 +145,9 @@ def show():
                 cv.text((now.pos_x, now.pos_y), now.text, font=font1, fill=txt_fill)
 
                 layer2_left = now.child[:len(now.child)//2]
-                layer2_left_span = 2000
+                layer2_left_span = 2800
                 layer2_right = now.child[len(now.child)//2:]
-                layer2_right_span = 2000
+                layer2_right_span = 2800
 
                 for (i, chd) in enumerate(layer2_left): # left child of main keyword
                     chd.pos_x = cv_width_block + adjusted
@@ -169,8 +169,8 @@ def show():
                 cv.text((now.pos_x, now.pos_y), now.text, font=font2, fill=txt_fill)
                 
                 layer3 = [*now.child]
-                left_span = (2*layer2_left_span/(len(layer2_left)+1))//1.25
-                right_span = (2*layer2_right_span/(len(layer2_right)+1))//1.25
+                left_span = (2*layer2_left_span/(len(layer2_left)+1))//1.25 - 20
+                right_span = (2*layer2_right_span/(len(layer2_right)+1))//1.25 - 20
 
                 for (i, chd) in enumerate(layer3): # left(only) child of sub-keyword
                     if now.direction == -1:
