@@ -7,18 +7,18 @@ from PIL import Image, ImageDraw, ImageFont
 
 # ********** Settings ********** #
 all_node = []
-adjusted = 75
+adjusted = 80
 
 # canvas size(pix) settings
-cv_width  = 3840*2
+cv_width  = 3840*2 + 960
 cv_height = 2160*2
 cv_width_block = cv_width/5
 
 # font settings
 default_font = ImageFont.truetype("arial.ttf", 10)
-font1 = ImageFont.truetype("arial.ttf", 100)
-font2 = ImageFont.truetype("arial.ttf", 50)
-font3 = ImageFont.truetype("arial.ttf", 30)
+font1 = ImageFont.truetype("arial.ttf", 150)
+font2 = ImageFont.truetype("arial.ttf", 100)
+font3 = ImageFont.truetype("arial.ttf", 75)
 txt_fill = (0, 0, 0) # black
 # ********** Settings end ********** #
 
@@ -47,19 +47,16 @@ class Keyword:
         # for debug
         par = 'X' if self.parent == None else self.parent.text
         return f'Keyword: {self.text}, layer: {self.layer}\n --- parent: {par}, child: {self.child}\n'
-
-    def __lt__(self, other):
-        return len(self.text) < len(self.text)
     
     def __eq__(self, other):
-        return len(self.text) == len(other.text)
+        return self.text == other
     
     def __len__(self):
         return len(self.text)
 
 
 
-def add_nextline(sentence, max_words_in_line = 7) -> str:
+def add_nextline(sentence, max_words_in_line = 10) -> str:
     space_cnt = 1
     sentence_lst = list(sentence)
 
@@ -72,13 +69,22 @@ def add_nextline(sentence, max_words_in_line = 7) -> str:
 
     return ''.join(sentence_lst)
 
+def add_nextline2(sentence, max_chars_in_line = 50) -> str:
+    sentence_lst = list(sentence)
+
+    for (i, j) in enumerate(sentence):
+        if (i+1) % max_chars_in_line == 0:
+            sentence_lst[i] += '\n'
+
+    return ''.join(sentence_lst)
+
 def extract(): # extract canvas image to .png file
     pil2opencv = cv2.cvtColor(np.array(pImg), cv2.COLOR_RGB2BGR) 
     cv2.imwrite("test.png", pil2opencv)
     cv2.destroyAllWindows()
 
 def parsing_md(file_name: str):
-    f = open(file_name, 'r')
+    f = open(file_name, 'r', encoding='UTF8')
     extracted = [i.strip() for i in f.readlines()]
     root_node = Keyword()
     prv_node2 = Keyword()
@@ -91,9 +97,11 @@ def parsing_md(file_name: str):
 
             gen_node.parent = prv_node3
             gen_node.tlen = len(detail)
-            prv_node3.child.append(gen_node)
 
-            all_node.append(gen_node)
+            if prv_node3 != 'default':
+                prv_node3.child.append(gen_node)
+
+                all_node.append(gen_node)
 
         elif context.startswith('###'): # sub-sub-keyword
             detail = (subsubkw := context[4:].strip())
@@ -101,25 +109,32 @@ def parsing_md(file_name: str):
             if len(detail) > 0:
                 gen_node = Keyword(detail, 3)
 
-                prv_node3 = gen_node
-                gen_node.parent = prv_node2
+                
                 gen_node.tlen = cv.textlength(subsubkw, font=font3)
-                prv_node2.child.append(gen_node)
+                gen_node.parent = prv_node2
+                
+                if len(prv_node2.child) < 3:
+                    prv_node3 = gen_node
+                    prv_node2.child.append(gen_node)
 
-                all_node.append(gen_node)
+                    all_node.append(gen_node)
+                else:
+                    prv_node3 = Keyword()
 
         elif context.startswith('##'): # sub-keyword
             sub_topic = (subkw := context[3:].strip())
-
+            print(root_node.child, len(root_node.child))
             if len(sub_topic) > 0:
                 gen_node = Keyword(sub_topic, 2)
 
                 prv_node2 = gen_node
-                gen_node.parent = root_node
                 gen_node.tlen = cv.textlength(subkw, font=font2)
-                root_node.child.append(gen_node)
+                gen_node.parent = root_node
+                
+                if len(root_node.child) < 6:
+                    root_node.child.append(gen_node)
 
-                all_node.append(gen_node)
+                    all_node.append(gen_node)
 
         elif context.startswith('#'): # keyword
             main_topic = (mainkw := context[2:].strip())
@@ -144,13 +159,18 @@ def show():
 
                 cv.text((now.pos_x, now.pos_y), now.text, font=font1, fill=txt_fill)
 
+                if len(now.child) > 6:
+                    now.child = now.child[:6]
+
                 layer2_left = now.child[:len(now.child)//2]
-                layer2_left_span = 2800
+
                 layer2_right = now.child[len(now.child)//2:]
-                layer2_right_span = 2800
+
+                layer2_left_span = cv_height - 1440
+                layer2_right_span = cv_height - 1440
 
                 for (i, chd) in enumerate(layer2_left): # left child of main keyword
-                    chd.pos_x = cv_width_block + adjusted
+                    chd.pos_x = cv_width_block + adjusted*4
                     chd.direction = -1
                     if len(layer2_left) == 1:
                         chd.pos_y = now.pos_y + 6
@@ -158,7 +178,7 @@ def show():
                         chd.pos_y = now.pos_y - layer2_left_span//2 + i*(layer2_left_span//(len(layer2_left)-1))
                 
                 for (i, chd) in enumerate(layer2_right): # right child of main keyword
-                    chd.pos_x = cv_width_block*3 + now.tlen/2 + adjusted
+                    chd.pos_x = now.pos_x + now.tlen + adjusted*6
                     chd.direction = 1
                     if len(layer2_right) == 1:
                         chd.pos_y = now.pos_y
@@ -166,16 +186,16 @@ def show():
                         chd.pos_y = now.pos_y - layer2_right_span//2 + i*(layer2_right_span//(len(layer2_right)-1))
             
             case 2: # sub-keyword
-                cv.text((now.pos_x, now.pos_y), now.text, font=font2, fill=txt_fill)
+                cv.text((now.pos_x, now.pos_y), add_nextline2(now.text, 20), font=font2, fill=txt_fill)
                 
                 layer3 = [*now.child]
-                left_span = (2*layer2_left_span/(len(layer2_left)+1))//1.25 - 20
-                right_span = (2*layer2_right_span/(len(layer2_right)+1))//1.25 - 20
+                left_span = (2*layer2_left_span/(len(layer2_left)+1))//1.25 - 420
+                right_span = (2*layer2_right_span/(len(layer2_right)+1))//1.25 - 420
 
                 for (i, chd) in enumerate(layer3): # left(only) child of sub-keyword
                     if now.direction == -1:
                         chd.direction = -1
-                        chd.pos_x = adjusted
+                        chd.pos_x = adjusted+10
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y + 12
                         else:
@@ -183,26 +203,28 @@ def show():
 
                     elif now.direction == 1: # right(only) child of sub-keyword
                         chd.direction = 1
-                        chd.pos_x = cv_width_block*4
+                        chd.pos_x = cv_width_block*4 - adjusted
                         if len(layer3) == 1:
                             chd.pos_y = now.pos_y
                         else:
                             chd.pos_y = now.pos_y - right_span//2 + i*(right_span//(len(layer3)-1))
                         
             case 3: # sub-sub-keyword
-                cv.text((now.pos_x, now.pos_y), text=add_nextline(now.text), font=font3, fill=txt_fill)
+                #clen = now.tlen//5
+                cv.text((now.pos_x, now.pos_y), text=add_nextline2(now.text), font=font3, fill=txt_fill)
                 if now.child:
                     dscrp = now.child[0]
                     if now.direction == -1: # left(only) child of sub-keyword
                         dscrp.pos_x = now.pos_x
-                        dscrp.pos_y = now.pos_y + 35
+                        dscrp.pos_y = now.pos_y + 80
                     
                     elif now.direction == 1: # right(only) child of sub-keyword
                         dscrp.pos_x = now.pos_x
-                        dscrp.pos_y = now.pos_y + 35
+                        dscrp.pos_y = now.pos_y + 80
 
             case 4: # description
-                cv.text((now.pos_x, now.pos_y), text=add_nextline(now.text), font=font3, fill=txt_fill)
+                #clen = now.tlen//5
+                cv.text((now.pos_x, now.pos_y), text=add_nextline2(now.text), font=font3, fill=txt_fill)
                 # add_nextline --- to be updated
 
 
@@ -212,6 +234,6 @@ if __name__ == "__main__":
     pImg = Image.fromarray(cv2.cvtColor(window, cv2.COLOR_BGR2RGB))
     cv = ImageDraw.Draw(pImg)
 
-    parsing_md('test4.in')
+    parsing_md('output.md')
     show()
     extract()
