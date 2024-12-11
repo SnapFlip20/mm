@@ -1,4 +1,4 @@
-# Last updated: 2024-12-10
+# Last updated: 2024-12-11
 
 import cv2
 import numpy as np
@@ -157,7 +157,7 @@ def show():
                 now.pos_x = ctx
                 now.pos_y = cty
 
-                cv.text((now.pos_x, now.pos_y), now.text, font=font1, fill=txt_fill)
+                cv.text((now.pos_x, now.pos_y), add_nextline2(now.text, 15), font=font1, fill=txt_fill)
 
                 if len(now.child) > 6:
                     now.child = now.child[:6]
@@ -191,6 +191,10 @@ def show():
                 layer3 = [*now.child]
                 left_span = (2*layer2_left_span/(len(layer2_left)+1))//1.25 - 420
                 right_span = (2*layer2_right_span/(len(layer2_right)+1))//1.25 - 420
+
+                if now.direction == -1:
+                    left_end = now.pos_x + now.tlen
+                    cv.line()
 
                 for (i, chd) in enumerate(layer3): # left(only) child of sub-keyword
                     if now.direction == -1:

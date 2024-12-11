@@ -1,4 +1,4 @@
-# Last updated: 2024-12-10
+# Last updated: 2024-12-11
 
 import re
 import requests
@@ -7,7 +7,7 @@ import os
 
 
 
-url = ''
+url = 'https://arxiv.org/html/2412.05341v1'
 
 def extract_title_and_summary(section):
     title = section['title'] if 'title' in section else 'Untitled'
