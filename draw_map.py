@@ -192,9 +192,15 @@ def show():
                 left_span = (2*layer2_left_span/(len(layer2_left)+1))//1.25 - 420
                 right_span = (2*layer2_right_span/(len(layer2_right)+1))//1.25 - 420
 
+                # now : layer2, parent: layer1
                 if now.direction == -1:
-                    left_end = now.pos_x + now.tlen
-                    cv.line()
+                    left_end = (now.pos_x + now.tlen, now.pos_y)
+                    main_left = (now.parent.pos_x, now.parent.pos_y)
+                    cv.line((left_end, main_left), fill='black', width=5)
+                elif now.direction == 1:
+                    main_right = (now.parent.pos_x+now.parent.tlen, now.parent.pos_y)
+                    right_front = (now.pos_x, now.pos_y)
+                    cv.line((main_right, right_front), fill='black', width=5)
 
                 for (i, chd) in enumerate(layer3): # left(only) child of sub-keyword
                     if now.direction == -1:
@@ -216,6 +222,17 @@ def show():
             case 3: # sub-sub-keyword
                 #clen = now.tlen//5
                 cv.text((now.pos_x, now.pos_y), text=add_nextline2(now.text), font=font3, fill=txt_fill)
+
+                # now : layer3, parent: layer2
+                if now.direction == -1:
+                    left_end = (now.pos_x + now.tlen, now.pos_y)
+                    main_left = (now.parent.pos_x, now.parent.pos_y)
+                    cv.line((left_end, main_left), fill='black', width=5)
+                elif now.direction == 1:
+                    main_right = (now.parent.pos_x+now.parent.tlen, now.parent.pos_y)
+                    right_front = (now.pos_x, now.pos_y)
+                    cv.line((main_right, right_front), fill='black', width=5)
+
                 if now.child:
                     dscrp = now.child[0]
                     if now.direction == -1: # left(only) child of sub-keyword
